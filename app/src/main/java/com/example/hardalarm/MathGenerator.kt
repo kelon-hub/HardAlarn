@@ -96,7 +96,7 @@ object MathGenerator {
         val n = kotlin.math.abs(num / g)
         val d = den / g
         val sign = if (num < 0) "-" else ""
-        val piPart = if (n == 1) "π" else "$nπ"
+        val piPart = if (n == 1) "π" else "${n}π"
         return if (d == 1) sign + piPart else "$sign$piPart/$d"
     }
 
