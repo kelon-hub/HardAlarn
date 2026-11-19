@@ -23,11 +23,24 @@ class AlarmService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var escalating = false
     private var phase = 1
+    private var destroyed = false
+
+    private val resumeRunnable = Runnable {
+        if (!destroyed) play()
+    }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent?.action == ACTION_MUTE) {
+            handler.removeCallbacks(resumeRunnable)
+            stopPlaying()
+            handler.postDelayed(resumeRunnable, MUTE_MS)
+            return START_NOT_STICKY
+        }
+
         phase = intent?.getIntExtra(EXTRA_PHASE, 1) ?: 1
+        handler.removeCallbacks(resumeRunnable)
         startAsForeground()
         play()
         if (phase == 2) startEscalation()
@@ -54,6 +67,7 @@ class AlarmService : Service() {
     }
 
     private fun play() {
+        if (destroyed) return
         stopPlaying()
         val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
@@ -78,6 +92,7 @@ class AlarmService : Service() {
         val max = audio.getStreamMaxVolume(AudioManager.STREAM_ALARM)
         val step = object : Runnable {
             override fun run() {
+                if (destroyed) return
                 val cur = audio.getStreamVolume(AudioManager.STREAM_ALARM)
                 if (cur < max) {
                     audio.setStreamVolume(AudioManager.STREAM_ALARM, cur + 1, 0)
@@ -94,6 +109,7 @@ class AlarmService : Service() {
     }
 
     override fun onDestroy() {
+        destroyed = true
         handler.removeCallbacksAndMessages(null)
         stopPlaying()
         super.onDestroy()
@@ -102,12 +118,20 @@ class AlarmService : Service() {
     companion object {
         const val CHANNEL_ID = "hard_alarm"
         const val EXTRA_PHASE = "phase"
+        const val ACTION_MUTE = "com.example.hardalarm.MUTE"
         private const val NOTIF_ID = 2
         private const val STEP_MS = 30_000L
+        private const val MUTE_MS = 20_000L
 
         fun start(context: Context, phase: Int) {
             context.startForegroundService(
                 Intent(context, AlarmService::class.java).putExtra(EXTRA_PHASE, phase)
+            )
+        }
+
+        fun muteTemporarily(context: Context) {
+            context.startService(
+                Intent(context, AlarmService::class.java).setAction(ACTION_MUTE)
             )
         }
 
