@@ -15,11 +15,14 @@ class AlarmActivity : AppCompatActivity() {
     private var phase = 1
     private var problems: List<MathGenerator.Problem> = emptyList()
     private var index = 0
+    private var solved = false
+    private var emergencyTaps = 0
 
     private lateinit var title: TextView
     private lateinit var question: TextView
     private lateinit var progress: TextView
     private lateinit var buttons: List<Button>
+    private lateinit var btnMute: Button
     private lateinit var stopButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,15 +43,29 @@ class AlarmActivity : AppCompatActivity() {
         title = findViewById(R.id.phaseTitle)
         question = findViewById(R.id.question)
         progress = findViewById(R.id.progress)
+        btnMute = findViewById(R.id.btnMute)
         stopButton = findViewById(R.id.stopButton)
         buttons = listOf(R.id.opt0, R.id.opt1, R.id.opt2, R.id.opt3).map { findViewById(it) }
+
+        btnMute.setOnClickListener {
+            btnMute.isEnabled = false
+            btnMute.text = "Звук на паузе (20 сек)..."
+            AlarmService.muteTemporarily(this)
+        }
 
         stopButton.setOnClickListener {
             if (phase == 1) {
                 AlarmService.stop(this)
                 finish()
-            } else {
+            } else if (solved) {
                 finishAlarm()
+            } else {
+                emergencyTaps++
+                if (emergencyTaps >= 15) {
+                    finishAlarm()
+                } else {
+                    stopButton.text = "Реши примеры (сброс: $emergencyTaps/15)"
+                }
             }
         }
 
@@ -75,15 +92,19 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun setup() {
         phase = intent.getIntExtra("phase", 1)
+        solved = false
+        emergencyTaps = 0
+        stopButton.text = "СТОП"
+
         if (phase == 1) {
             title.text = "Фаза 1 — проснись!"
             question.visibility = View.GONE
+            btnMute.visibility = View.GONE
             progress.text = "Просто нажми «Стоп».\nНо через 3 минуты придёт фаза 2 — сама."
             buttons.forEach { it.visibility = View.GONE }
-            stopButton.isEnabled = true
         } else {
-            stopButton.isEnabled = false
             title.text = "Фаза 2 — реши 5 примеров"
+            btnMute.visibility = View.VISIBLE
             problems = MathGenerator.generate(5)
             index = 0
             showProblem()
@@ -92,13 +113,17 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun showProblem() {
         if (index >= problems.size) {
+            solved = true
             progress.text = "Все примеры решены. Свобода!"
             question.visibility = View.GONE
+            btnMute.visibility = View.GONE
             buttons.forEach { it.visibility = View.GONE }
-            stopButton.isEnabled = true
+            stopButton.text = "СТОП"
             return
         }
         val p = problems[index]
+        btnMute.isEnabled = true
+        btnMute.text = "Приглушить звук на 20 сек"
         progress.text = "Пример ${index + 1} из ${problems.size}"
         question.visibility = View.VISIBLE
         question.text = p.question
