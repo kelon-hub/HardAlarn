@@ -95,7 +95,7 @@ class AlarmActivity : AppCompatActivity() {
         solved = false
         emergencyTaps = 0
         stopButton.text = "СТОП"
-
+AlarmService.start(this, phase)
         if (phase == 1) {
             title.text = "Фаза 1 — проснись!"
             question.visibility = View.GONE
