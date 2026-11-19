@@ -42,9 +42,20 @@ class AlarmService : Service() {
         phase = intent?.getIntExtra(EXTRA_PHASE, 1) ?: 1
         handler.removeCallbacks(resumeRunnable)
         startAsForeground()
+        ensureMinVolume()
         play()
         if (phase == 2) startEscalation()
         return START_NOT_STICKY
+    }
+
+    private fun ensureMinVolume() {
+        val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val max = audio.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+        val cur = audio.getStreamVolume(AudioManager.STREAM_ALARM)
+        val target = (max * 0.7).toInt().coerceAtLeast(1)
+        if (cur < target) {
+            runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, target, 0) }
+        }
     }
 
     private fun startAsForeground() {
@@ -71,17 +82,20 @@ class AlarmService : Service() {
         stopPlaying()
         val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-        player = MediaPlayer().apply {
-            setDataSource(this@AlarmService, uri)
-            setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            )
-            isLooping = true
-            prepare()
-            start()
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        runCatching {
+            player = MediaPlayer().apply {
+                setDataSource(this@AlarmService, uri)
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                isLooping = true
+                prepare()
+                start()
+            }
         }
     }
 
@@ -95,7 +109,7 @@ class AlarmService : Service() {
                 if (destroyed) return
                 val cur = audio.getStreamVolume(AudioManager.STREAM_ALARM)
                 if (cur < max) {
-                    audio.setStreamVolume(AudioManager.STREAM_ALARM, cur + 1, 0)
+                    runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, cur + 1, 0) }
                 }
                 if (cur + 1 < max) handler.postDelayed(this, STEP_MS)
             }
@@ -104,7 +118,7 @@ class AlarmService : Service() {
     }
 
     private fun stopPlaying() {
-        player?.let { runCatching { it.stop() }; it.release() }
+        player?.let { runCatching { it.stop() }; runCatching { it.release() } }
         player = null
     }
 
@@ -124,19 +138,25 @@ class AlarmService : Service() {
         private const val MUTE_MS = 20_000L
 
         fun start(context: Context, phase: Int) {
-            context.startForegroundService(
-                Intent(context, AlarmService::class.java).putExtra(EXTRA_PHASE, phase)
-            )
+            runCatching {
+                context.startForegroundService(
+                    Intent(context, AlarmService::class.java).putExtra(EXTRA_PHASE, phase)
+                )
+            }
         }
 
         fun muteTemporarily(context: Context) {
-            context.startService(
-                Intent(context, AlarmService::class.java).setAction(ACTION_MUTE)
-            )
+            runCatching {
+                context.startService(
+                    Intent(context, AlarmService::class.java).setAction(ACTION_MUTE)
+                )
+            }
         }
 
         fun stop(context: Context) {
-            context.stopService(Intent(context, AlarmService::class.java))
+            runCatching {
+                context.stopService(Intent(context, AlarmService::class.java))
+            }
         }
     }
 }
