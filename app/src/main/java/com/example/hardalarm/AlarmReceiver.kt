@@ -22,11 +22,17 @@ class AlarmReceiver : BroadcastReceiver() {
             NotificationChannel(AlarmService.CHANNEL_ID, "Будильник", NotificationManager.IMPORTANCE_HIGH)
         )
 
+        val activityIntent = Intent(context, AlarmActivity::class.java)
+            .addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+            )
+            .putExtra("phase", phase)
+
         val fullScreen = PendingIntent.getActivity(
             context, phase,
-            Intent(context, AlarmActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .putExtra("phase", phase),
+            activityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -48,5 +54,6 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         AlarmService.start(context, phase)
+        runCatching { context.startActivity(activityIntent) }
     }
 }
