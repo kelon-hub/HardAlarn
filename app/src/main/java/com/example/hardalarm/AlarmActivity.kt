@@ -7,6 +7,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.media.ToneGenerator
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -47,7 +48,7 @@ class AlarmActivity : AppCompatActivity() {
 
     private val volumeStepRunnable = object : Runnable {
         override fun run() {
-            if (!isMuted) {
+            if (!isMuted && phase == 2) {
                 val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
                 val max = audio.getStreamMaxVolume(AudioManager.STREAM_ALARM)
                 val cur = audio.getStreamVolume(AudioManager.STREAM_ALARM)
@@ -86,7 +87,6 @@ class AlarmActivity : AppCompatActivity() {
             btnMute.isEnabled = false
             btnMute.text = "Звук на паузе (20 сек)..."
             stopSound()
-            AlarmService.muteTemporarily(this)
             handler.removeCallbacks(unmuteRunnable)
             handler.postDelayed(unmuteRunnable, 20_000L)
         }
@@ -97,11 +97,11 @@ class AlarmActivity : AppCompatActivity() {
                 AlarmService.stop(this)
                 finish()
             } else if (solved) {
-                finishAlarm()
+                finishPhase2AndShowGoals()
             } else {
                 emergencyTaps++
                 if (emergencyTaps >= 15) {
-                    finishAlarm()
+                    finishPhase2AndShowGoals()
                 } else {
                     stopButton.text = "Реши примеры (сброс: $emergencyTaps/15)"
                 }
@@ -121,16 +121,34 @@ class AlarmActivity : AppCompatActivity() {
 
         val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val maxAlarm = audio.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        val targetAlarm = (maxAlarm * 0.8).toInt().coerceAtLeast(1)
-        if (audio.getStreamVolume(AudioManager.STREAM_ALARM) < targetAlarm) {
-            runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, targetAlarm, 0) }
+        if (phase == 1) {
+            val targetAlarm = (maxAlarm * 0.8).toInt().coerceAtLeast(1)
+            if (audio.getStreamVolume(AudioManager.STREAM_ALARM) < targetAlarm) {
+                runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, targetAlarm, 0) }
+            }
+        } else {
+            runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, 1, 0) }
         }
 
-        val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        val prefs = getSharedPreferences("hard_alarm", Context.MODE_PRIVATE)
+        val savedUriStr = prefs.getString("music_uri", null)
+        val customUri = savedUriStr?.let { runCatching { Uri.parse(it) }.getOrNull() }
+        val fallbackUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        val started = runCatching {
+        val started = (customUri != null && tryPlayUri(customUri)) ||
+            (fallbackUri != null && tryPlayUri(fallbackUri))
+
+        if (!started) {
+            runCatching {
+                toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 100)
+                toneGen?.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 60_000)
+            }
+        }
+    }
+
+    private fun tryPlayUri(uri: Uri): Boolean {
+        return runCatching {
             player = MediaPlayer().apply {
                 setDataSource(this@AlarmActivity, uri)
                 setAudioAttributes(
@@ -143,15 +161,8 @@ class AlarmActivity : AppCompatActivity() {
                 prepare()
                 start()
             }
-            true
+            player?.isPlaying == true
         }.getOrDefault(false)
-
-        if (!started || player?.isPlaying != true) {
-            runCatching {
-                toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 100)
-                toneGen?.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 60_000)
-            }
-        }
     }
 
     private fun stopSound() {
@@ -161,13 +172,18 @@ class AlarmActivity : AppCompatActivity() {
         toneGen = null
     }
 
-    private fun finishAlarm() {
+    private fun finishPhase2AndShowGoals() {
         handler.removeCallbacksAndMessages(null)
         stopSound()
         val prefs = getSharedPreferences("hard_alarm", MODE_PRIVATE)
         val days = prefs.getStringSet("days", emptySet())?.map { it.toInt() }?.toSet() ?: emptySet()
-        AlarmScheduler.schedule(this, prefs.getInt("hour", 5), prefs.getInt("minute", 0), days)
+        if (days.isNotEmpty()) {
+            AlarmScheduler.schedule(this, prefs.getInt("hour", 5), prefs.getInt("minute", 0), days)
+        } else {
+            prefs.edit().putBoolean("enabled", false).apply()
+        }
         AlarmService.stop(this)
+        startActivity(Intent(this, GoalsActivity::class.java))
         finish()
     }
 
@@ -195,10 +211,10 @@ class AlarmActivity : AppCompatActivity() {
             progress.text = "Просто нажми «Стоп».\nНо через 3 минуты придёт фаза 2 — сама."
             buttons.forEach { it.visibility = View.GONE }
         } else {
-            title.text = "Фаза 2 — реши 5 примеров"
+            title.text = "Фаза 2 — реши 3 примера"
             btnMute.visibility = View.VISIBLE
             handler.postDelayed(volumeStepRunnable, 30_000L)
-            problems = MathGenerator.generate(5)
+            problems = MathGenerator.generate(3)
             index = 0
             showProblem()
         }
@@ -209,11 +225,11 @@ class AlarmActivity : AppCompatActivity() {
             solved = true
             handler.removeCallbacksAndMessages(null)
             stopSound()
-            progress.text = "Все примеры решены. Свобода!"
+            progress.text = "Все 3 примера решены. Свобода!"
             question.visibility = View.GONE
             btnMute.visibility = View.GONE
             buttons.forEach { it.visibility = View.GONE }
-            stopButton.text = "СТОП"
+            stopButton.text = "СТОП И ПОКАЗАТЬ ЦЕЛИ"
             return
         }
         val p = problems[index]
@@ -232,7 +248,7 @@ class AlarmActivity : AppCompatActivity() {
                         showProblem()
                     } else {
                         progress.text = "Ошибка! Решаем заново"
-                        problems = MathGenerator.generate(5)
+                        problems = MathGenerator.generate(3)
                         index = 0
                         showProblem()
                     }
