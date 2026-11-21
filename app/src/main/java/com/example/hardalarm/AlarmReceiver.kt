@@ -15,12 +15,19 @@ import androidx.core.app.NotificationManagerCompat
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        val prefs = context.getSharedPreferences("hard_alarm", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("enabled", true)) return
+
         val phase = if (intent.action == AlarmScheduler.ACTION_PHASE_1) 1 else 2
 
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(
-            NotificationChannel(AlarmService.CHANNEL_ID, "Будильник", NotificationManager.IMPORTANCE_HIGH)
-        )
+        val channel = NotificationChannel(
+            AlarmService.CHANNEL_ID, "Будильник (без звука)", NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            setSound(null, null)
+            enableVibration(false)
+        }
+        nm.createNotificationChannel(channel)
 
         val activityIntent = Intent(context, AlarmActivity::class.java)
             .addFlags(
@@ -38,10 +45,11 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val notif = NotificationCompat.Builder(context, AlarmService.CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle("Жёсткий будильник")
-            .setContentText(if (phase == 1) "Фаза 1 — просыпайся" else "Фаза 2 — реши примеры")
+            .setContentTitle("The Death Clocks")
+            .setContentText(if (phase == 1) "Фаза 1 — просыпайся" else "Фаза 2 — реши 3 примера")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setSilent(true)
             .setFullScreenIntent(fullScreen, true)
             .setContentIntent(fullScreen)
             .build()
@@ -53,7 +61,6 @@ class AlarmReceiver : BroadcastReceiver() {
             NotificationManagerCompat.from(context).notify(phase, notif)
         }
 
-        AlarmService.start(context, phase)
         runCatching { context.startActivity(activityIntent) }
     }
 }
