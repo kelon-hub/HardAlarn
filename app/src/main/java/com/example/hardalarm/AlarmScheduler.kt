@@ -12,7 +12,13 @@ object AlarmScheduler {
     const val ACTION_PHASE_2 = "com.example.hardalarm.PHASE_2"
     private const val PHASE2_OFFSET_MS = 2 * 60_000L
 
-    fun schedule(context: Context, hour: Int, minute: Int, days: Set<Int> = emptySet()): Boolean {
+    fun schedule(
+        context: Context,
+        hour: Int,
+        minute: Int,
+        days: Set<Int> = emptySet(),
+        alarmId: Int = 1
+    ): Boolean {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (Build.VERSION.SDK_INT >= 31 && !am.canScheduleExactAlarms()) return false
         val selected = if (days.isEmpty()) (1..7).toSet() else days
@@ -20,21 +26,21 @@ object AlarmScheduler {
             val t = nextOccurrenceOn(hour, minute, day)
             am.setAlarmClock(
                 AlarmManager.AlarmClockInfo(t, openApp(context)),
-                pi(context, 10 + day, ACTION_PHASE_1)
+                pi(context, alarmId * 100 + 10 + day, ACTION_PHASE_1, alarmId)
             )
             am.setAlarmClock(
                 AlarmManager.AlarmClockInfo(t + PHASE2_OFFSET_MS, openApp(context)),
-                pi(context, 20 + day, ACTION_PHASE_2)
+                pi(context, alarmId * 100 + 20 + day, ACTION_PHASE_2, alarmId)
             )
         }
         return true
     }
 
-    fun cancel(context: Context) {
+    fun cancel(context: Context, alarmId: Int = 1) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         for (day in 1..7) {
-            am.cancel(pi(context, 10 + day, ACTION_PHASE_1))
-            am.cancel(pi(context, 20 + day, ACTION_PHASE_2))
+            am.cancel(pi(context, alarmId * 100 + 10 + day, ACTION_PHASE_1, alarmId))
+            am.cancel(pi(context, alarmId * 100 + 20 + day, ACTION_PHASE_2, alarmId))
         }
     }
 
@@ -55,10 +61,12 @@ object AlarmScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-    private fun pi(context: Context, code: Int, action: String): PendingIntent =
+    private fun pi(context: Context, code: Int, action: String, alarmId: Int): PendingIntent =
         PendingIntent.getBroadcast(
             context, code,
-            Intent(context, AlarmReceiver::class.java).setAction(action),
+            Intent(context, AlarmReceiver::class.java)
+                .setAction(action)
+                .putExtra("alarm_id", alarmId),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 }
