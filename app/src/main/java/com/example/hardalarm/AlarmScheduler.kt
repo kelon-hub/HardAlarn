@@ -10,7 +10,7 @@ import java.util.Calendar
 object AlarmScheduler {
     const val ACTION_PHASE_1 = "com.example.hardalarm.PHASE_1"
     const val ACTION_PHASE_2 = "com.example.hardalarm.PHASE_2"
-    private const val PHASE2_OFFSET_MS = 3 * 60_000L
+    private const val PHASE2_OFFSET_MS = 2 * 60_000L
 
     fun schedule(context: Context, hour: Int, minute: Int, days: Set<Int> = emptySet()): Boolean {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
