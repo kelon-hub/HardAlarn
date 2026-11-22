@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -17,14 +18,61 @@ class AlarmsListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_alarms_list)
 
-        container = findViewById(R.id.alarmsContainer)
-        tvCountdown = findViewById(R.id.tvCountdown)
+        val pixelFont = runCatching { ResourcesCompat.getFont(this, R.font.comic_sans_pixel) }.getOrNull()
 
-        findViewById<Button>(R.id.btnBackToMain).setOnClickListener {
-            finish()
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#0D0D12"))
+            setPadding(44, 44, 44, 44)
         }
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val titleTv = TextView(this).apply {
+            text = "Все будильники"
+            setTextColor(Color.parseColor("#00BFFF"))
+            textSize = 22f
+            typeface = pixelFont
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        val btnBack = Button(this).apply {
+            text = "+ Новый"
+            textSize = 14f
+            typeface = pixelFont
+            setOnClickListener { finish() }
+        }
+
+        header.addView(titleTv)
+        header.addView(btnBack)
+
+        tvCountdown = TextView(this).apply {
+            text = "Следующий сигнал: не активен"
+            setTextColor(Color.parseColor("#90CAF9"))
+            textSize = 14f
+            typeface = pixelFont
+            setPadding(0, 24, 0, 32)
+        }
+
+        container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        val scroll = ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+            )
+            addView(container)
+        }
+
+        root.addView(header)
+        root.addView(tvCountdown)
+        root.addView(scroll)
+        setContentView(root)
 
         renderAlarms()
     }
