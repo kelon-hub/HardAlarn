@@ -16,6 +16,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
+import kotlin.math.roundToInt
 
 class AlarmService : Service() {
 
@@ -24,6 +25,7 @@ class AlarmService : Service() {
     private var escalating = false
     private var phase = 1
     private var destroyed = false
+    private var currentVolume = 0.8f
 
     private val resumeRunnable = Runnable {
         if (!destroyed) play()
@@ -39,22 +41,31 @@ class AlarmService : Service() {
             return START_NOT_STICKY
         }
 
-        phase = intent?.getIntExtra(EXTRA_PHASE, 1) ?: 1
+        val newPhase = intent?.getIntExtra(EXTRA_PHASE, 1) ?: 1
+        // Сбрасываем флаг нарастания, если перешли из 1-й фазы во 2-ю
+        if (newPhase != phase) {
+            escalating = false
+            handler.removeCallbacksAndMessages(null)
+        }
+        phase = newPhase
+
+        // Устанавливаем стартовую громкость плеера по фазе
+        currentVolume = if (phase == 1) 0.8f else 0.3f
+
         handler.removeCallbacks(resumeRunnable)
         startAsForeground()
-        ensureMinVolume()
+        setSystemAlarmMaxVolume()
         play()
+
         if (phase == 2) startEscalation()
         return START_NOT_STICKY
     }
 
-    private fun ensureMinVolume() {
+    private fun setSystemAlarmMaxVolume() {
         val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val max = audio.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-        val cur = audio.getStreamVolume(AudioManager.STREAM_ALARM)
-        val target = (max * 0.7).toInt().coerceAtLeast(1)
-        if (cur < target) {
-            runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, target, 0) }
+        runCatching {
+            audio.setStreamVolume(AudioManager.STREAM_ALARM, max, 0)
         }
     }
 
@@ -66,7 +77,7 @@ class AlarmService : Service() {
         val notif: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("Жёсткий будильник")
-            .setContentText(if (phase == 1) "Фаза 1: вставай" else "Фаза 2: реши примеры")
+            .setContentText(if (phase == 1) "Фаза 1: вставай" else "Фаза 2: реши 5 примеров")
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
@@ -94,6 +105,7 @@ class AlarmService : Service() {
                 )
                 isLooping = true
                 prepare()
+                setVolume(currentVolume, currentVolume)
                 start()
             }
         }
@@ -102,16 +114,20 @@ class AlarmService : Service() {
     private fun startEscalation() {
         if (escalating) return
         escalating = true
-        val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val max = audio.getStreamMaxVolume(AudioManager.STREAM_ALARM)
         val step = object : Runnable {
             override fun run() {
-                if (destroyed) return
-                val cur = audio.getStreamVolume(AudioManager.STREAM_ALARM)
-                if (cur < max) {
-                    runCatching { audio.setStreamVolume(AudioManager.STREAM_ALARM, cur + 1, 0) }
+                if (destroyed || phase != 2) return
+                if (currentVolume < 1.0f) {
+                    // Прибавляем ровно 0.1 и округляем до десятых, чтобы избежать 0.70000005
+                    currentVolume = (((currentVolume + 0.1f) * 10).roundToInt() / 10f)
+                        .coerceAtMost(1.0f)
+                    runCatching {
+                        player?.setVolume(currentVolume, currentVolume)
+                    }
+                    if (currentVolume < 1.0f) {
+                        handler.postDelayed(this, STEP_MS)
+                    }
                 }
-                if (cur + 1 < max) handler.postDelayed(this, STEP_MS)
             }
         }
         handler.postDelayed(step, STEP_MS)
