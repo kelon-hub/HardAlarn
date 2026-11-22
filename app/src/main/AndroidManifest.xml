@@ -13,8 +13,8 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_fg"
+        android:roundIcon="@mipmap/ic_launcher_fg"
         android:label="The death Clock"
         android:theme="@style/Theme.AppCompat.NoActionBar">
 
