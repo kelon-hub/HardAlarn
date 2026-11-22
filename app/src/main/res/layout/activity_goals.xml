@@ -10,15 +10,93 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Главка 1: Заметка и фото для будильника -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="casual"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="center"
+            android:paddingBottom="8dp"
+            android:text="Заметка будильника"
+            android:textColor="#00BFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/ivNotePreview"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="8dp"
+            android:adjustViewBounds="true"
+            android:background="#1E1E24"
+            android:contentDescription="Фото заметки"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvNoPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginBottom="8dp"
+            android:background="#1E1E24"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="center"
+            android:text="Фото не прикреплено"
+            android:textColor="#888888"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnChangeNotePhoto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/comic_sans_pixel"
+                android:text="Выбрать фото"
+                android:textSize="13sp" />
+
+            <Button
+                android:id="@+id/btnClearNotePhoto"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/comic_sans_pixel"
+                android:text="Удалить фото"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etAlarmNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:background="#E1BEE7"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="top"
+            android:hint="Текст заметки при звонке..."
+            android:minLines="2"
+            android:padding="12dp"
+            android:textColor="#1A1A1A"
+            android:textColorHint="#555555"
+            android:textSize="16sp" />
+
+        <!-- Главка 2: Мои цели -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/comic_sans_pixel"
             android:gravity="center"
             android:paddingBottom="12dp"
             android:text="Мои цели"
             android:textColor="#FFFFFF"
-            android:textSize="26sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <EditText
@@ -27,14 +105,14 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:background="#FFF59D"
-            android:fontFamily="casual"
+            android:fontFamily="@font/comic_sans_pixel"
             android:gravity="top"
             android:hint="Цели на ДЕНЬ..."
             android:minLines="3"
             android:padding="14dp"
             android:textColor="#1A1A1A"
             android:textColorHint="#666666"
-            android:textSize="18sp" />
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/etWeek"
@@ -42,14 +120,14 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:background="#C8E6C9"
-            android:fontFamily="casual"
+            android:fontFamily="@font/comic_sans_pixel"
             android:gravity="top"
             android:hint="Цели на НЕДЕЛЮ..."
             android:minLines="3"
             android:padding="14dp"
             android:textColor="#1A1A1A"
             android:textColorHint="#666666"
-            android:textSize="18sp" />
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/etMonth"
@@ -57,14 +135,14 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
             android:background="#B3E5FC"
-            android:fontFamily="casual"
+            android:fontFamily="@font/comic_sans_pixel"
             android:gravity="top"
             android:hint="Цели на МЕСЯЦ..."
             android:minLines="3"
             android:padding="14dp"
             android:textColor="#1A1A1A"
             android:textColorHint="#666666"
-            android:textSize="18sp" />
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/etYear"
@@ -72,20 +150,20 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:background="#FFE0B2"
-            android:fontFamily="casual"
+            android:fontFamily="@font/comic_sans_pixel"
             android:gravity="top"
             android:hint="Цели на ГОД..."
             android:minLines="3"
             android:padding="14dp"
             android:textColor="#1A1A1A"
             android:textColorHint="#666666"
-            android:textSize="18sp" />
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/btnSaveGoals"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:fontFamily="casual"
+            android:fontFamily="@font/comic_sans_pixel"
             android:text="Сохранить и закрыть"
             android:textSize="18sp"
             android:textStyle="bold" />
