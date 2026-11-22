@@ -139,17 +139,19 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <!-- СПРАВА: Все будильники -->
+                                <!-- СПРАВА: Все будильники -->
                 <Button
                     android:id="@+id/btnAllAlarms"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_marginStart="6dp"
-                    android:layout_weight="1"
+                    android:layout_weight="1.15"
                     android:fontFamily="@font/comic_sans_pixel"
-                    android:text="Все буд."
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    android:maxLines="2"
+                    android:paddingHorizontal="4dp"
+                    android:text="Все будильники"
+                    android:textSize="11sp" />
+                
 
         </LinearLayout>
     </ScrollView>
