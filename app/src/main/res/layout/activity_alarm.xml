@@ -1,79 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="20dp">
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/phaseTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:orientation="vertical"
+        android:padding="20dp">
 
-    <TextView
-        android:id="@+id/progress"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:gravity="center"
-        android:textSize="16sp" />
+        <TextView
+            android:id="@+id/phaseTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="center"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/question"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="24dp"
-        android:gravity="center"
-        android:textSize="26sp"
-        android:textStyle="bold" />
+        <TextView
+            android:id="@+id/progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="center"
+            android:textSize="16sp" />
 
-    <Button
-        android:id="@+id/opt0"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:textSize="18sp" />
+        <!-- Фото-заметка пользователя -->
+        <ImageView
+            android:id="@+id/notePhoto"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:layout_marginTop="16dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="Фото заметки"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
 
-    <Button
-        android:id="@+id/opt1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:textSize="18sp" />
+        <TextView
+            android:id="@+id/noteText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#66000000"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="center"
+            android:padding="8dp"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
-    <Button
-        android:id="@+id/opt2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:textSize="18sp" />
+        <TextView
+            android:id="@+id/question"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:gravity="center"
+            android:textSize="26sp"
+            android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/opt3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:textSize="18sp" />
+        <Button
+            android:id="@+id/opt0"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:textSize="18sp" />
 
-    <Button
-        android:id="@+id/btnMute"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:text="Приглушить звук на 20 сек"
-        android:textSize="16sp" />
+        <Button
+            android:id="@+id/opt1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:textSize="18sp" />
 
-    <Button
-        android:id="@+id/stopButton"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="СТОП"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        <Button
+            android:id="@+id/opt2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:textSize="18sp" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/opt3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btnMute"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:text="Приглушить звук на 20 сек"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:text="СТОП"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</ScrollView>
