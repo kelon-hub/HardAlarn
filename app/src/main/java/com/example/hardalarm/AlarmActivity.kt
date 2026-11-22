@@ -1,4 +1,7 @@
 package com.example.hardalarm
+import android.animation.ValueAnimator
+import android.graphics.Color
+import android.widget.ImageView
 
 import android.content.Context
 import android.content.Intent
@@ -257,6 +260,9 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+        private var sunriseAnimator: ValueAnimator? = null
+    private var brightnessAnimator: ValueAnimator? = null
+    
         private fun stopVisualAnimators() {
         sunriseAnimator?.cancel()
         brightnessAnimator?.cancel()
