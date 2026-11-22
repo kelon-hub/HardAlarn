@@ -1,21 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://android.com"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:fillColor="#0D0D12" android:pathData="M0,0h108v108h-108z" />
-    <path
-        android:pathData="M54,54m-38,0a38,38 0,1 1,76 0a38,38 0,1 1,-76 0"
-        android:strokeWidth="3.5"
-        android:strokeColor="#FF4081" />
-    <path
-        android:pathData="M54,54m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0"
-        android:strokeWidth="3"
-        android:strokeColor="#00E5FF" />
-    <path
-        android:pathData="M54,54L40,42M54,54L74,38"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:strokeColor="#FF4081" />
-</vector>
+<adaptive-icon xmlns:android="http://android.com">
+    <background android:drawable="@android:color/black"/>
+    <foreground android:drawable="@mipmap/ic_launcher_fg"/>
+</adaptive-icon>
