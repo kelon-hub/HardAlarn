@@ -154,7 +154,11 @@
                 
 
         </LinearLayout>
+                        </LinearLayout>
+
+        </LinearLayout>
     </ScrollView>
+
 
     <!-- Тонкий неоновый разделитель -->
     <View
