@@ -1,113 +1,233 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:background="#0D0D12"
+    android:orientation="vertical">
 
+    <!-- Верхняя прокручиваемая часть: часики, настройки сигнала и кнопки сохранения -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 1. Круглые часики по центру -->
+            <TimePicker
+                android:id="@+id/timePicker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:timePickerMode="clock" />
+
+            <!-- 2. Треугольник: Сообщение при срабатывании -->
+            <LinearLayout
+                android:id="@+id/rowMessage"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="▶"
+                    android:textColor="#00BFFF"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/comic_sans_pixel"
+                    android:text="Сообщение при срабатывании"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- 3. Нота: Мелодия -->
+            <LinearLayout
+                android:id="@+id/rowMelody"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp">
+
+                <TextView
+                    android:layout_width="32dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="♪"
+                    android:textColor="#00BFFF"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/tvMelodyLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/comic_sans_pixel"
+                    android:text="Мелодия"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- Статус -->
+            <TextView
+                android:id="@+id/info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:fontFamily="@font/comic_sans_pixel"
+                android:gravity="center"
+                android:text="Будильник готов к настройке"
+                android:textColor="#90CAF9"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- 4. Ряд управления: [Настройки будильника] — [Сохранить] — [Все будильники] -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- СЛЕВА: Настройки самих будильников -->
+                <ImageButton
+                    android:id="@+id/btnAlarmSettings"
+                    android:layout_width="54dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="6dp"
+                    android:background="#1E1E26"
+                    android:contentDescription="Настройки будильников"
+                    android:src="@android:drawable/ic_menu_preferences" />
+
+                <!-- ПО ЦЕНТРУ: Сохранить -->
+                <Button
+                    android:id="@+id/btnSet"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="4dp"
+                    android:layout_weight="1.3"
+                    android:fontFamily="@font/comic_sans_pixel"
+                    android:text="Сохранить"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <!-- СПРАВА: Все будильники -->
+                <Button
+                    android:id="@+id/btnAllAlarms"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/comic_sans_pixel"
+                    android:text="Все буд."
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Тонкий неоновый разделитель -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#263238" />
+
+    <!-- 5. Закреплённая нижняя панель из 5 вкладок -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="54dp"
+        android:background="#14141C"
         android:gravity="center"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TimePicker
-            android:id="@+id/timePicker"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <CheckBox android:id="@+id/cbMon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Пн" />
-            <CheckBox android:id="@+id/cbTue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Вт" />
-            <CheckBox android:id="@+id/cbWed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Ср" />
-            <CheckBox android:id="@+id/cbThu" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Чт" />
-            <CheckBox android:id="@+id/cbFri" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Пт" />
-            <CheckBox android:id="@+id/cbSat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Сб" />
-            <CheckBox android:id="@+id/cbSun" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/comic_sans_pixel" android:text="Вс" />
-        </LinearLayout>
-
-        <!-- Ряд 1: Музыка и Фото для заметки -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnPickMusic"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/comic_sans_pixel"
-                android:text="Выбрать музыку" />
-
-            <Button
-                android:id="@+id/btnPickPhoto"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/comic_sans_pixel"
-                android:text="Фото заметки" />
-        </LinearLayout>
-
-        <!-- Ряд 2: Настройка 1-й фазы (Ночь / Рассвет) и Мои цели -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnPhase1Style"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/comic_sans_pixel"
-                android:text="Фаза 1: Ночные часы" />
-
-            <Button
-                android:id="@+id/btnGoals"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:fontFamily="@font/comic_sans_pixel"
-                android:text="Мои цели" />
-        </LinearLayout>
+        android:orientation="horizontal"
+        android:paddingHorizontal="2dp">
 
         <Button
-            android:id="@+id/btnSet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:id="@+id/tabAlarm"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:fontFamily="@font/comic_sans_pixel"
-            android:text="Поставить будильник" />
+            android:padding="2dp"
+            android:text="Будильник"
+            android:textColor="#00BFFF"
+            android:textSize="10sp" />
 
         <Button
-            android:id="@+id/btnCancel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:id="@+id/tabTimer"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:fontFamily="@font/comic_sans_pixel"
-            android:text="Снять будильник" />
+            android:padding="2dp"
+            android:text="Таймер"
+            android:textColor="#B0BEC5"
+            android:textSize="10sp" />
 
-        <TextView
-            android:id="@+id/info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+        <Button
+            android:id="@+id/tabStopwatch"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
             android:fontFamily="@font/comic_sans_pixel"
-            android:gravity="center"
-            android:text="Будильник не установлен"
-            android:textSize="15sp" />
+            android:padding="2dp"
+            android:text="Секундом."
+            android:textColor="#B0BEC5"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/tabWorldClock"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:padding="2dp"
+            android:text="Мир. часы"
+            android:textColor="#B0BEC5"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/tabWeather"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fontFamily="@font/comic_sans_pixel"
+            android:padding="2dp"
+            android:text="Погода"
+            android:textColor="#B0BEC5"
+            android:textSize="10sp" />
     </LinearLayout>
-</ScrollView>
+
+</LinearLayout>
