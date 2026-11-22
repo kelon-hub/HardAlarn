@@ -257,9 +257,15 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+        private fun stopVisualAnimators() {
+        sunriseAnimator?.cancel()
+        brightnessAnimator?.cancel()
+    }
+
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
-        stopSound()
+        stopVisualAnimators()
+        AlarmService.stop(this)
         super.onDestroy()
     }
 }
