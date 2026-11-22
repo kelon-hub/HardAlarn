@@ -41,6 +41,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Выбор фото из галереи для заметки будильника
+    private val pickPhotoLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            runCatching {
+                contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            getSharedPreferences("hard_alarm", Context.MODE_PRIVATE)
+                .edit()
+                .putString("note_photo_uri", uri.toString())
+                .apply()
+            info.text = "Фото для заметки прикреплено!"
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -68,6 +86,31 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnPickMusic).setOnClickListener {
             pickAudioLauncher.launch(arrayOf("audio/*"))
+        }
+
+        // Кнопка прикрепления фото (id: btnPickPhoto)
+        val pickPhotoId = resources.getIdentifier("btnPickPhoto", "id", packageName)
+        if (pickPhotoId != 0) {
+            findViewById<Button>(pickPhotoId)?.setOnClickListener {
+                pickPhotoLauncher.launch(arrayOf("image/*"))
+            }
+        }
+
+        // Кнопка переключения стиля 1-й фазы: Ночные часы / Световой рассвет (id: btnPhase1Style)
+        val styleBtnId = resources.getIdentifier("btnPhase1Style", "id", packageName)
+        if (styleBtnId != 0) {
+            findViewById<Button>(styleBtnId)?.apply {
+                val currentStyle = prefs.getString("phase1_style", "NIGHT_CLOCK")
+                text = if (currentStyle == "SUNRISE") "Фаза 1: Световой рассвет" else "Фаза 1: Ночные часы"
+
+                setOnClickListener {
+                    val nowSunrise = prefs.getString("phase1_style", "NIGHT_CLOCK") == "SUNRISE"
+                    val nextStyle = if (nowSunrise) "NIGHT_CLOCK" else "SUNRISE"
+                    prefs.edit().putString("phase1_style", nextStyle).apply()
+                    text = if (nextStyle == "SUNRISE") "Фаза 1: Световой рассвет" else "Фаза 1: Ночные часы"
+                    info.text = "Режим 1-й фазы обновлён!"
+                }
+            }
         }
 
         findViewById<Button>(R.id.btnGoals).setOnClickListener {
