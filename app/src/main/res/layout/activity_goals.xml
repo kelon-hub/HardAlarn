@@ -23,15 +23,16 @@
             android:textStyle="bold" />
 
         <ImageView
-            android:id="@+id/ivNotePreview"
+            android:id="@+id/notePhoto"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginBottom="8dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:adjustViewBounds="true"
-            android:background="#1E1E24"
             android:contentDescription="Фото заметки"
-            android:scaleType="centerCrop"
+            android:maxHeight="280dp"
+            android:scaleType="fitCenter"
             android:visibility="gone" />
+        
 
         <TextView
             android:id="@+id/tvNoPhoto"
