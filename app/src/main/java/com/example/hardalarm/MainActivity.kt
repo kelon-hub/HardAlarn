@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var info: TextView
     private val selectedDays = mutableSetOf<Int>()
     private var currentMusicUri: String? = null
+    private var currentMusicName: String = "Стандартная мелодия"
 
     private val pickAudioLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -37,11 +39,8 @@ class MainActivity : AppCompatActivity() {
                 )
             }
             currentMusicUri = uri.toString()
-            getSharedPreferences("hard_alarm", Context.MODE_PRIVATE)
-                .edit()
-                .putString("music_uri", uri.toString())
-                .apply()
-            info.text = "Своя мелодия выбрана для этого будильника!"
+            currentMusicName = getFileName(uri) ?: "Своя мелодия"
+            info.text = "Мелодия: $currentMusicName"
         }
     }
 
@@ -49,34 +48,33 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val prefs = getSharedPreferences("hard_alarm", Context.MODE_PRIVATE)
         val picker = findViewById<TimePicker>(R.id.timePicker)
         picker.setIs24HourView(true)
         picker.hour = 8
         picker.minute = 0
         info = findViewById(R.id.info)
 
-        // Треугольник: сообщение и фото при срабатывании
+        // Треугольник: общие заметки и фото для всех будильников
         findViewById<View>(R.id.rowMessage).setOnClickListener {
             startActivity(Intent(this, GoalsActivity::class.java))
         }
 
-        // Нота: выбор мелодии
+        // Нота: выбор индивидуальной мелодии для создаваемого будильника
         findViewById<View>(R.id.rowMelody).setOnClickListener {
             pickAudioLauncher.launch(arrayOf("audio/*"))
         }
 
-        // Кнопка СПРАВА: открыть полноценный список "Все будильники" с сортировкой по времени
+        // Кнопка СПРАВА: список всех будильников с группировкой по дням и времени
         findViewById<Button>(R.id.btnAllAlarms).setOnClickListener {
             startActivity(Intent(this, AlarmsListActivity::class.java))
         }
 
-        // Кнопка СЛЕВА: настройки самих будильников (дни недели + Ночь/Рассвет)
+        // Кнопка СЛЕВА: настройки будильника (дни недели и режим 1-й фазы)
         findViewById<ImageButton>(R.id.btnAlarmSettings).setOnClickListener {
             showAlarmSettingsDialog()
         }
 
-        // Кнопка ПО ЦЕНТРУ: сохранить новый будильник в список и поставить в расписание
+        // Кнопка ПО ЦЕНТРУ: сохранить новый будильник
         findViewById<Button>(R.id.btnSet).setOnClickListener {
             if (Build.VERSION.SDK_INT >= 33 &&
                 ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
@@ -94,36 +92,30 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Генерируем уникальный ID для нового будильника, чтобы он не затирал старые
-            val newId = ((System.currentTimeMillis() / 1000) % 50_000).toInt().coerceAtLeast(1)
-            val noteText = prefs.getString("note_text", "") ?: ""
-            val photoUri = prefs.getString("note_photo_uri", null)
-            val musicUri = currentMusicUri ?: prefs.getString("music_uri", null)
-
+            val newId = AlarmStorage.generateNextId(this)
             val newAlarm = AlarmItem(
                 id = newId,
                 hour = picker.hour,
                 minute = picker.minute,
                 days = selectedDays.toSet(),
                 enabled = true,
-                noteText = noteText,
-                photoUri = photoUri,
-                musicUri = musicUri
+                musicUri = currentMusicUri,
+                musicName = currentMusicName
             )
 
             val ok = AlarmScheduler.schedule(this, picker.hour, picker.minute, selectedDays, newId)
             if (ok) {
                 AlarmStorage.addOrUpdate(this, newAlarm)
                 val totalCount = AlarmStorage.loadAll(this).size
-                info.text = "Добавлен на %02d:%02d! Всего будильников: $totalCount".format(picker.hour, picker.minute)
-                // Сбрасываем выбранные дни для следующего нового будильника
+                info.text = "Добавлен на %02d:%02d! Всего: $totalCount".format(picker.hour, picker.minute)
                 selectedDays.clear()
+                currentMusicUri = null
+                currentMusicName = "Стандартная мелодия"
             } else {
                 info.text = "Не удалось поставить будильник — проверь права"
             }
         }
 
-        // Заглушки для нижних вкладок (Таймер, Секундомер, Мировые часы, Погода)
         val stubTabs = listOf(R.id.tabTimer, R.id.tabStopwatch, R.id.tabWorldClock, R.id.tabWeather)
         stubTabs.forEach { tabId ->
             findViewById<Button>(tabId).setOnClickListener { btn ->
@@ -157,5 +149,18 @@ class MainActivity : AppCompatActivity() {
             }
             .setPositiveButton("Готово", null)
             .show()
+    }
+
+    private fun getFileName(uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx >= 0) result = cursor.getString(idx)
+                }
+            }
+        }
+        return result ?: uri.lastPathSegment
     }
 }
