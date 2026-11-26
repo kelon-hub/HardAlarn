@@ -11,9 +11,8 @@ data class AlarmItem(
     val minute: Int,
     val days: Set<Int>,
     val enabled: Boolean,
-    val noteText: String = "",
-    val photoUri: String? = null,
-    val musicUri: String? = null
+    val musicUri: String? = null,
+    val musicName: String = "Стандартная мелодия"
 ) {
     fun getNextTriggerMillis(): Long {
         val selected = if (days.isEmpty()) (1..7).toSet() else days
@@ -64,9 +63,8 @@ object AlarmStorage {
                         minute = obj.getInt("minute"),
                         days = daysSet,
                         enabled = obj.optBoolean("enabled", true),
-                        noteText = obj.optString("noteText", ""),
-                        photoUri = obj.optString("photoUri", "").ifBlank { null },
-                        musicUri = obj.optString("musicUri", "").ifBlank { null }
+                        musicUri = obj.optString("musicUri", "").ifBlank { null },
+                        musicName = obj.optString("musicName", "Стандартная мелодия")
                     )
                 )
             }
@@ -74,11 +72,13 @@ object AlarmStorage {
         return list
     }
 
-    fun loadSorted(context: Context): List<AlarmItem> {
-        return loadAll(context).sortedWith(
-            compareByDescending<AlarmItem> { it.enabled }
-                .thenBy { it.getNextTriggerMillis() }
-        )
+    fun getById(context: Context, id: Int): AlarmItem? {
+        return loadAll(context).find { it.id == id }
+    }
+
+    fun generateNextId(context: Context): Int {
+        val maxId = loadAll(context).maxOfOrNull { it.id } ?: 0
+        return maxId + 1
     }
 
     fun saveAll(context: Context, list: List<AlarmItem>) {
@@ -90,9 +90,8 @@ object AlarmStorage {
                 put("minute", item.minute)
                 put("days", JSONArray(item.days.toList()))
                 put("enabled", item.enabled)
-                put("noteText", item.noteText)
-                put("photoUri", item.photoUri ?: "")
                 put("musicUri", item.musicUri ?: "")
+                put("musicName", item.musicName)
             }
             arr.put(obj)
         }
