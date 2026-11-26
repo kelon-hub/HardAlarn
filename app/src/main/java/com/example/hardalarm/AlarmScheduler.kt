@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import java.util.Calendar
 
@@ -44,6 +45,12 @@ object AlarmScheduler {
         }
     }
 
+    fun rescheduleAllEnabled(context: Context) {
+        AlarmStorage.loadAll(context).filter { it.enabled }.forEach { item ->
+            schedule(context, item.hour, item.minute, item.days, item.id)
+        }
+    }
+
     fun nextOccurrenceOn(hour: Int, minute: Int, dayOfWeek: Int): Long =
         Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
@@ -66,6 +73,7 @@ object AlarmScheduler {
             context, code,
             Intent(context, AlarmReceiver::class.java)
                 .setAction(action)
+                .setData(Uri.parse("hardalarm://alarm/$alarmId/$code"))
                 .putExtra("alarm_id", alarmId),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
