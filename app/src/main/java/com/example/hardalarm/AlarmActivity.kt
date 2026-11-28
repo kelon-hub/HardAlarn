@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -19,6 +20,8 @@ import androidx.appcompat.app.AppCompatActivity
 class AlarmActivity : AppCompatActivity() {
 
     private var phase = 1
+    private var alarmId = -1
+    private var isInterphase = false
     private var problems: List<MathGenerator.Problem> = emptyList()
     private var index = 0
     private var solved = false
@@ -27,6 +30,7 @@ class AlarmActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var sunriseAnimator: ValueAnimator? = null
     private var brightnessAnimator: ValueAnimator? = null
+    private var interphaseTimer: CountDownTimer? = null
 
     private lateinit var rootLayout: View
     private lateinit var title: TextView
@@ -59,7 +63,7 @@ class AlarmActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_alarm)
 
-        rootLayout = findViewById(android.R.id.content)
+        rootLayout = findViewById(R.id.alarmRoot)
         title = findViewById(R.id.phaseTitle)
         question = findViewById(R.id.question)
         progress = findViewById(R.id.progress)
@@ -81,9 +85,11 @@ class AlarmActivity : AppCompatActivity() {
         }
 
         stopButton.setOnClickListener {
-            if (phase == 1) {
+            if (phase == 1 && !isInterphase) {
                 AlarmService.stop(this)
-                finish()
+                enterInterphaseMode()
+            } else if (isInterphase) {
+                progress.text = "Ждём 2-ю фазу! Посмотри на фото выше"
             } else if (solved) {
                 finishPhase2AndShowGoals()
             } else {
@@ -103,16 +109,50 @@ class AlarmActivity : AppCompatActivity() {
         setup()
     }
 
+    private fun enterInterphaseMode() {
+        isInterphase = true
+        stopVisualAnimators()
+        rootLayout.setBackgroundColor(Color.parseColor("#0D0D12"))
+        title.setTextColor(Color.parseColor("#00BFFF"))
+        progress.setTextColor(Color.parseColor("#90CAF9"))
+
+        title.text = "Междуфазье — не засыпай!"
+        stopButton.text = "Ожидание 2-й фазы..."
+        stopButton.isEnabled = false
+        loadNoteMedia()
+
+        interphaseTimer?.cancel()
+        interphaseTimer = object : CountDownTimer(120_000L, 1_000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secTotal = millisUntilFinished / 1000
+                val min = secTotal / 60
+                val sec = secTotal % 60
+                progress.text = "До 2-й фазы: %02d:%02d".format(min, sec)
+            }
+
+            override fun onFinish() {
+                progress.text = "Запуск 2-й фазы..."
+            }
+        }.start()
+    }
+
     private fun finishPhase2AndShowGoals() {
         handler.removeCallbacksAndMessages(null)
-        val prefs = getSharedPreferences("hard_alarm", MODE_PRIVATE)
-        val days = prefs.getStringSet("days", emptySet())?.map { it.toInt() }?.toSet() ?: emptySet()
-        if (days.isNotEmpty()) {
-            AlarmScheduler.schedule(this, prefs.getInt("hour", 5), prefs.getInt("minute", 0), days)
-        } else {
-            prefs.edit().putBoolean("enabled", false).apply()
-        }
+        interphaseTimer?.cancel()
         AlarmService.stop(this)
+
+        if (alarmId > 0) {
+            val item = AlarmStorage.getById(this, alarmId)
+            if (item != null) {
+                if (item.days.isNotEmpty()) {
+                    AlarmScheduler.schedule(this, item.hour, item.minute, item.days, item.id)
+                } else {
+                    AlarmStorage.addOrUpdate(this, item.copy(enabled = false))
+                    AlarmScheduler.cancel(this, item.id)
+                }
+            }
+        }
+
         startActivity(Intent(this, GoalsActivity::class.java))
         finish()
     }
@@ -125,13 +165,17 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun setup() {
         phase = intent.getIntExtra("phase", 1)
+        alarmId = intent.getIntExtra("alarm_id", -1)
+        isInterphase = false
         solved = false
         emergencyTaps = 0
+        stopButton.isEnabled = true
         stopButton.text = "СТОП"
         handler.removeCallbacksAndMessages(null)
+        interphaseTimer?.cancel()
         stopVisualAnimators()
 
-        AlarmService.start(this, phase)
+        AlarmService.start(this, phase, alarmId)
         loadNoteMedia()
 
         if (phase == 1) {
@@ -139,7 +183,7 @@ class AlarmActivity : AppCompatActivity() {
             title.text = "Фаза 1 — проснись!"
             question.visibility = View.GONE
             btnMute.visibility = View.GONE
-            progress.text = "Просто нажми «Стоп».\nНо через 2 минуты придёт фаза 2 — сама."
+            progress.text = "Нажми «Стоп», чтобы перейти в междуфазье (2 мин.)"
             buttons.forEach { it.visibility = View.GONE }
         } else {
             rootLayout.setBackgroundColor(Color.parseColor("#131313"))
@@ -235,38 +279,37 @@ class AlarmActivity : AppCompatActivity() {
         }
         val p = problems[index]
         btnMute.isEnabled = true
-        btnMute.text = "Приглушить звук на 20 сек"
-        progress.text = "Пример ${index + 1} из ${problems.size}"
-        question.visibility = View.VISIBLE
-        question.text = p.question
-        p.options.forEachIndexed { i, opt ->
-            buttons[i].apply {
-                visibility = View.VISIBLE
-                text = opt
-                setOnClickListener {
-                    if (i == p.correctIndex) {
-                        index++
-                        showProblem()
-                    } else {
-                        progress.text = "Ошибка! Решаем заново"
-                        problems = MathGenerator.generate(5)
-                        index = 0
-                        showProblem()
-                    }
-                }
-            }
-        }
-    }
-
-    private fun stopVisualAnimators() {
-        sunriseAnimator?.cancel()
-        brightnessAnimator?.cancel()
-    }
-
-    override fun onDestroy() {
-        handler.removeCallbacksAndMessages(null)
-        stopVisualAnimators()
-        AlarmService.stop(this)
-        super.onDestroy()
-    }
+btnMute.text = "Приглушить звук на 20 сек"
+progress.text = "Пример ${index + 1} из ${problems.size}"
+question.visibility = View.VISIBLE
+question.text = p.question
+p.options.forEachIndexed { i, opt ->
+buttons[i].apply {
+visibility = View.VISIBLE
+text = opt
+setOnClickListener {
+if (i == p.correctIndex) {
+index++
+showProblem()
+} else {
+progress.text = "Ошибка! Решаем заново"
+problems = MathGenerator.generate(5)
+index = 0
+showProblem()
 }
+}
+}
+}
+}
+private fun stopVisualAnimators() {
+sunriseAnimator?.cancel()
+brightnessAnimator?.cancel()
+}
+override fun onDestroy() {
+handler.removeCallbacksAndMessages(null)
+interphaseTimer?.cancel()
+stopVisualAnimators()
+AlarmService.stop(this)
+super.onDestroy()
+}
+}        
